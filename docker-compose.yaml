@@ -1,32 +1,31 @@
-version: '3'
 services:
-    mosquitto:
-      build:
-        context: .
-        dockerfile: ./docker/Dockerfile-mqtt 
-      container_name: mosquitto
-      ports:
-        - "1883:1883"
-        # - "9001:9001"
-      volumes:
-        - ./config/mosquitto.cfg:/mosquitto/config/mosquitto.conf
-      restart: always
-    
-    database:
-      container_name: database
-      build:
-        context: .
-        dockerfile: ./docker/Dockerfile-db 
-      ports:
-        - "3306:3306"
-      environment:
-        MYSQL_ROOT_PASSWORD: cadore#dbmqtt
-
-    connector:
-      container_name: connector
-      build:
-        context: .
-        dockerfile: ./docker/Dockerfile-app
-      restart: always
-      depends_on:
-        - database
+  mqtt-broker:
+    image: eclipse-mosquitto
+    ports:
+      - 1883/tcp
+    restart: always
+    volumes:
+      - ./mqtt-broker/mosquitto.cfg:/mosquitto/config/mosquitto.conf
+  database:
+    environment:
+      MYSQL_DATABASE: currentTS
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/secret-db
+    image: mysql
+    ports:
+      - 3306/tcp
+    restart: always
+    secrets:
+      - secret-db
+    volumes:
+      - ./database/secret-setup.sql:/docker-entrypoint-initdb.d/setup.sql
+  connector:
+    build:
+      context: .
+      dockerfile: ./connector/Dockerfile
+    depends_on:
+      - mqtt-broker
+      - database
+    restart: always
+secrets:
+  secret-db:
+    file: ./database/secret-db

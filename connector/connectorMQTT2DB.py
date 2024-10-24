@@ -1,21 +1,24 @@
-# Importa as bibliotecas mysql.connector e paho.mqtt.cliente
+# Importa as bibliotecas mysql.connector e paho.mqtt.client
 import mysql.connector
 import paho.mqtt.client as mqtt
+from dotenv import load_dotenv
+from os import getenv
+load_dotenv()
 
-#Configura as variaveis do banco de dado
-db_host = "database"
-db_user = "yourUser"
-db_password = "Your#Password"
-db_database = "currentTS"
+# Configura as variaveis do banco de dado
+db_host = getenv("DB_HOST", default="database")
+db_user = getenv("DB_USER", default="yourUser")
+db_password = getenv("DB_PASSWORD", default="")
+db_database = getenv("DB_DATABASE", default="currentTS")
 
-#Configura as variaveis do MQTT
-mqtt_broker = "mosquitto"
-mqtt_port = 1883
-mqtt_luminosity_topic = "luminosidade"
-mqtt_temperature_topic = "temperatura"
+# Configura as variaveis do MQTT
+mqtt_broker = getenv("MQTT_BROKER", default="mqtt-broker")
+mqtt_port = getenv("MQTT_PORT", default=1883)
+mqtt_luminosity_topic = getenv("MQTT_LUMINOSITY_TOPIC", default="luminosidade")
+mqtt_temperature_topic = getenv("MQTT_TEMPERATURE_TOPIC", default="temperatura")
 
 
-#Função camha quanddo ua mentsagem é recebida
+# Função camha quanddo ua mentsagem é recebida
 def on_message(client, userdata, message):
     mensagem = message.payload.decode("utf-8")
     print(f"Mensagem recebida: {mensagem}")

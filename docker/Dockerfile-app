@@ -1,8 +1,0 @@
-#Usa a imagem base do caminho passado
-FROM python:3.9.20
-
-# Copie o script para o diretório raiz do contêiner
-COPY app/connectorMQTT2DB.py /connectorMQTT2DB.py
-
-# Comando padrão a ser executado quando o contêiner for iniciado
-CMD ["tail", "-f", "/dev/null"]
