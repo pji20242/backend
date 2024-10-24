@@ -20,13 +20,13 @@ flowchart TD
 
 ### Banco de dados
 
-- `secret-db`: senha do administrador do MySQL. Exemplo:
+- `database/secret-db`: senha do administrador do MySQL. Exemplo:
 
 ```ini
 senha
 ```
 
-- `setup.sql`: preparação do banco de dados. Exemplo:
+- `database/setup.sql`: preparação do banco de dados. Exemplo:
 
 ```sql
 USE currentTS;
@@ -66,7 +66,7 @@ FLUSH PRIVILEGES;
 
 ### Conector
 
-- `.env`: variáveis de ambiente. Exemplo:
+- `connector/.env`: variáveis de ambiente. Exemplo:
 
 ```ini
 DB_HOST=database
