@@ -2,21 +2,21 @@ version: '3'
 services:
     mosquitto:
       build:
-        context: ./docker/
-        dockerfile: Dockerfile-mqtt 
+        context: .
+        dockerfile: ./docker/Dockerfile-mqtt 
       container_name: mosquitto
       ports:
         - "1883:1883"
         # - "9001:9001"
       volumes:
-        - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+        - ./config/mosquitto.cfg:/mosquitto/config/mosquitto.conf
       restart: always
     
     database:
       container_name: database
       build:
-        context: ./docker/
-        dockerfile: Dockerfile-db 
+        context: .
+        dockerfile: ./docker/Dockerfile-db 
       ports:
         - "3306:3306"
       environment:
@@ -25,8 +25,8 @@ services:
     connector:
       container_name: connector
       build:
-        context: ./docker/ 
-        dockerfile: Dockerfile-app
+        context: .
+        dockerfile: ./docker/Dockerfile-app
       restart: always
       depends_on:
         - database

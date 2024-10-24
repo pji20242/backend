@@ -5,4 +5,4 @@ ENV MYSQL_DATABASE currentTS
 ENV MYSQL_ROOT_PASSWORD cadore@dbmqtt
 
 # Copia o script SQL para inicializar o banco de dados
-COPY ./setup.sql /docker-entrypoint-initdb.d/
+COPY ./db/setup.sql /docker-entrypoint-initdb.d/
