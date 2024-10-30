@@ -35,7 +35,15 @@ services:
       - ./reverse-proxy/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt/live/vm0.pji3.sj.ifsc.edu.br/fullchain.pem:/etc/nginx/fullchain.pem:ro
       - /etc/letsencrypt/live/vm0.pji3.sj.ifsc.edu.br/privkey.pem:/etc/nginx/privkey.pem:ro
-      - ./frontend:/frontend:ro
+  frontend:
+    image: node
+    command: sh -c "cd /app && npm install && npm install -g vite && npm run build && vite preview --host 0.0.0.0"
+    restart: always
+    volumes:
+      - ./frontend:/app
 secrets:
   secret-db:
     file: ./database/secret-db
+
+
+
