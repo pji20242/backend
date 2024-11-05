@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "log"
+    "strings"
 
     MQTT "github.com/eclipse/paho.mqtt.golang"
 )
@@ -27,7 +28,7 @@ func main() {
     // Subscreve a um tópico
     topic := "pji3"
     if token := client.Subscribe(topic, 1, func(client MQTT.Client, msg MQTT.Message) {
-        fmt.Printf("Mensagem recebida no tópico %s: %s\n", msg.Topic(), msg.Payload())
+        processMessage(string(msg.Payload()))
     }); token.Wait() && token.Error() != nil {
         log.Fatalf("Erro ao subscrever ao tópico: %v", token.Error())
     }
@@ -35,4 +36,37 @@ func main() {
     // Manter o programa em execução
     fmt.Println("Aguardando mensagens...")
     select {}
+}
+
+// processMessage processa a mensagem recebida e imprime os dados formatados
+func processMessage(message string) {
+    // Separar o UUID da mensagem dos parâmetros
+    parts := strings.Split(message, "%")
+    if len(parts) < 2 {
+        fmt.Println("Formato da mensagem inválido.")
+        return
+    }
+
+    // O primeiro elemento é o UUID
+    uuid := parts[0]
+    fmt.Println("UUID:", uuid)
+
+    // Iterar sobre os parâmetros
+    for _, param := range parts[1:] {
+        // Se o parâmetro não estiver vazio
+        if param == "" {
+            continue
+        }
+
+        // Separar chave e valor
+        keyValue := strings.Split(param, "=")
+        if len(keyValue) != 2 {
+            fmt.Println("Formato de parâmetro inválido:", param)
+            continue
+        }
+
+        key := keyValue[0]
+        value := keyValue[1]
+        fmt.Printf("parametro: \"%s\" - Valor: \"%s\"\n", key, value)
+    }
 }
