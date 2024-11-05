@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Loop infinito para publicar mensagens a cada 1 segundo
-while true; do
+while true; doe
     # Gera um valor de temperatura, pressao e luminosidade aleatório
     temperatura=$((RANDOM % 50 + 1))
     pressao=$((RANDOM % 200 + 1))
@@ -20,6 +20,6 @@ while true; do
     # Publica os sensores de tensao e corrente do device 3
     mosquitto_pub -h 127.0.0.1 -p 1883 -t pji3 -m "375311ba-6e97-4c19-8c9d-45c5c479a520%Vol=$tensao%Amp=$corrente"
     
-    # Aguarda 1 segundo antes de repetir
-    sleep 1
+    # Aguarda 1 minuto antes de repetir
+    sleep 60
 done
