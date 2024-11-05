@@ -1,6 +1,6 @@
 USE pjiot;
 
-CREATE TABLE user (
+CREATE TABLE usuario (
     matricula INT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
@@ -9,21 +9,21 @@ CREATE TABLE user (
     ativo BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE device (
+CREATE TABLE dispositivo (
     uuid CHAR(36) PRIMARY KEY,
-    hwversion VARCHAR(50) NOT NULL,
-    swversion VARCHAR(50) NOT NULL,
-    latitude DECIMAL(9, 6) NOT NULL,
-    longitude DECIMAL(9, 6) NOT NULL, 
-    altitude DECIMAL(9, 2) NOT NULL
+    hwversion VARCHAR(50),
+    swversion VARCHAR(50),
+    latitude DECIMAL(9, 6),
+    longitude DECIMAL(9, 6),
+    altitude DECIMAL(9, 2)
 );
 
-CREATE TABLE device_user (
+CREATE TABLE dispositivo_usuario (
     matricula INT,
     uuid CHAR(36),
     PRIMARY KEY (matricula, uuid),
-    FOREIGN KEY (matricula) REFERENCES user(matricula) ON DELETE CASCADE,
-    FOREIGN KEY (uuid) REFERENCES device(uuid) ON DELETE CASCADE
+    FOREIGN KEY (matricula) REFERENCES usuario(matricula) ON DELETE CASCADE,
+    FOREIGN KEY (uuid) REFERENCES dispositivo(uuid) ON DELETE CASCADE
 );
 
 CREATE TABLE sensor (
@@ -32,18 +32,19 @@ CREATE TABLE sensor (
     tipo VARCHAR(50),
     unidade VARCHAR(20),
     PRIMARY KEY (idSensor, uuid),
-    FOREIGN KEY (uuid) REFERENCES device(uuid) ON DELETE CASCADE
+    UNIQUE (uuid, idSensor),  -- Adicionada uma restrição UNIQUE composta para (uuid, idSensor)
+    FOREIGN KEY (uuid) REFERENCES dispositivo(uuid) ON DELETE CASCADE
 );
 
+
 CREATE TABLE dados (
-    timeStamp TIMESTAMP,
+    ts TIMESTAMP,
     uuid CHAR(36),
     idSensor INT,
     valor DECIMAL(10, 2),
-    PRIMARY KEY (timeStamp, uuid, idSensor),
+    PRIMARY KEY (ts, uuid, idSensor),
     FOREIGN KEY (uuid, idSensor) REFERENCES sensor(uuid, idSensor) ON DELETE CASCADE
 );
-
 
 CREATE USER 'connectoruser'@'%' IDENTIFIED BY 'connectorpasswrd';
 GRANT ALL PRIVILEGES ON pjiot.* TO 'connectoruser'@'%';

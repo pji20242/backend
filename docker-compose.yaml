@@ -8,36 +8,34 @@ services:
     volumes:
       - ./mqtt-broker/mosquitto.cfg:/mosquitto/config/mosquitto.conf
     ports:
-      - 1883:1883
+      - "21883:1883"
 # ========================================================================================================
 
   grafana-server:
     container_name: grafana-server
     image: grafana/grafana:9.3.2-ubuntu
     restart: always
-    ports:
-      - "3000:3000"
     user: "0:1000"
     volumes:
       - "./grafana/grafanadata:/var/lib/grafana"
     env_file:
       - ./env_vars/.env_grafana
+    ports:
+      - "3000:3000"
 # ========================================================================================================
 
-  influxdb:
-    image: influxdb:1.8  # Especificando a versão 1.x do InfluxDB
-    container_name: influxdb
-    ports:
-      - "8086:8086"  # Porta padrão do InfluxDB
-    volumes:
-      - influxdb_data:/var/lib/influxdb
+  database:
     environment:
-      INFLUXDB_DB: mydb  # Nome do banco de dados que será criado
-      INFLUXDB_ADMIN_USER: admin  # Nome do usuário administrador
-      INFLUXDB_ADMIN_PASSWORD: admin_password  # Senha do usuário administrador
-      INFLUXDB_USER: myuser  # Nome do usuário padrão
-      INFLUXDB_USER_PASSWORD: myuser_password  # Senha do usuário padrão
-      INFLUXDB_HTTP_AUTH_ENABLED: "true"  # Habilitando autenticação
+      MYSQL_DATABASE: pjiot
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/secret-db
+    image: mysql
+    restart: always
+    secrets:
+      - secret-db
+    volumes:
+      - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    ports:
+      - "1883:3306"
 # ========================================================================================================
 
   connector:
@@ -56,25 +54,12 @@ services:
     image: nginx
     ports:
       - 80:80
-      - 443:443
-#      - 1883:1883
+#      - 443:443
     restart: always
     volumes:
       - ./reverse-proxy/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt/live/vm0.pji3.sj.ifsc.edu.br/fullchain.pem:/etc/nginx/fullchain.pem:ro
       - /etc/letsencrypt/live/vm0.pji3.sj.ifsc.edu.br/privkey.pem:/etc/nginx/privkey.pem:ro
-# ========================================================================================================
-
-#  database:
-#    environment:
-#      MYSQL_DATABASE: currentTS
-#      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/secret-db
-#    image: mysql
-#    restart: always
-#    secrets:
-#      - secret-db
-#    volumes:
-#      - ./database/secret-setup.sql:/docker-entrypoint-initdb.d/setup.sql
 # ========================================================================================================
 #  frontend:
 #    image: node
@@ -84,7 +69,7 @@ services:
 #      - ./frontend:/app
 secrets:
   secret-db:
-    file: ./database/secret-db
+    file: ./database/.secret-db
 
 volumes:
   influxdb_data:
