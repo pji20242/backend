@@ -1,7 +1,6 @@
-FROM python
+FROM alpine:3.12
 
-WORKDIR /
-COPY connector/requirements.txt connector/connectorMQTT2DB.py /app/
-RUN pip install -r /app/requirements.txt
 
-CMD [ "python", "/app/connectorMQTT2DB.py" ]
+# CMD ["tail", "-f", "/dev/null"]
+
+CMD ["/connector.out"]

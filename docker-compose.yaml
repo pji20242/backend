@@ -1,26 +1,31 @@
 services:
   mqtt-broker:
+    container_name: mqtt-broker
     image: eclipse-mosquitto
     restart: always
     volumes:
       - ./mqtt-broker/mosquitto.cfg:/mosquitto/config/mosquitto.conf
-  database:
-    environment:
-      MYSQL_DATABASE: currentTS
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/secret-db
-    image: mysql
-    restart: always
-    secrets:
-      - secret-db
-    volumes:
-      - ./database/secret-setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    ports:
+      - 1883:1883
+#  database:
+#    environment:
+#      MYSQL_DATABASE: currentTS
+#      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/secret-db
+#    image: mysql
+#    restart: always
+#    secrets:
+#      - secret-db
+#    volumes:
+#      - ./database/secret-setup.sql:/docker-entrypoint-initdb.d/setup.sql
   connector:
     build:
       context: .
       dockerfile: ./connector/Dockerfile
+    volumes:
+      - ./connector/connector.out:/connector.out:rw
     depends_on:
       - mqtt-broker
-      - database
+#      - database
     restart: always
   reverse-proxy:
     depends_on:
@@ -29,18 +34,18 @@ services:
     ports:
       - 80:80
       - 443:443
-      - 1883:1883
+#      - 1883:1883
     restart: always
     volumes:
       - ./reverse-proxy/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt/live/vm0.pji3.sj.ifsc.edu.br/fullchain.pem:/etc/nginx/fullchain.pem:ro
       - /etc/letsencrypt/live/vm0.pji3.sj.ifsc.edu.br/privkey.pem:/etc/nginx/privkey.pem:ro
-  frontend:
-    image: node
-    command: sh -c "cd /app && npm install && npm install -g vite && npm run build && vite preview --host 0.0.0.0"
-    restart: always
-    volumes:
-      - ./frontend:/app
+#  frontend:
+#    image: node
+#    command: sh -c "cd /app && npm install && npm install -g vite && npm run build && vite preview --host 0.0.0.0"
+#    restart: always
+#    volumes:
+#      - ./frontend:/app
 secrets:
   secret-db:
     file: ./database/secret-db
