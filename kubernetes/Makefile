@@ -1,8 +1,8 @@
 all: build view
 
 build:
-	make -C kubernetes
-	make -C components/mqtt-broker
+	kubectl apply -f ingressController.yaml
+	kubectl apply -f ns.yaml
 view:
 	kubectl get ns
 	kubectl get svc -n ingress-nginx
