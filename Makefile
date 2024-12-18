@@ -4,7 +4,7 @@ stop:
 	docker compose down
 
 start:
-	docker compose up & 
+	docker compose up -d
 
 clean:
 	docker images -q | xargs docker rmi -f
