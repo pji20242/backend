@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mosquitto
+    protocol: mqtt
+  name: mosquitto
+  namespace: pji3
+spec:
+  selector: 
+    matchLabels:
+      app: mosquitto
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mosquitto
+        protocol: mqtt
+    spec:
+      containers:
+        - image: docker.io/cticsjeifsc/mosquitto:latest
+          name: mosquitto
+          ports:
+            - containerPort: 1883
+            - containerPort: 9001
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 2
+              memory: 512Mi
+          volumeMounts:
+            - name: mosquitto-mosquitto-conf
+              mountPath: /mosquitto/config/
+      restartPolicy: Always
+      volumes:
+      - name: mosquitto-mosquitto-conf
+        configMap:
+          name: mosquitto-mosquitto-conf
+          items:
+          - path: "mosquitto.conf"
+            key: mosquitto.conf

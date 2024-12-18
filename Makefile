@@ -1,8 +1,13 @@
-all: build view
+all: stop start view
 
-build:
-	make -C kubernetes
-	make -C components/mqtt-broker
+stop:
+	make -C components/mqtt-broker stop
+	make -C kubernetes stop
+
+start:
+	make -C kubernetes start
+	make -C components/mqtt-broker start
+
 view:
 	kubectl get ns
 	kubectl get svc -n ingress-nginx

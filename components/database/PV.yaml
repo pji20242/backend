@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    app: pv
+  name: hostpath-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteMany
+  storageClassName: database
+  hostPath:
+    path: /data/pj3/database
+    type: Directory
