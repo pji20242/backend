@@ -1,0 +1,38 @@
+basePath: /api/v1
+definitions:
+  models.User:
+    properties:
+      ativo:
+        type: boolean
+      email:
+        type: string
+      matricula:
+        type: integer
+      nome:
+        type: string
+      privilegio:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API de exemplo em Go com Swagger
+  title: Minha API em Go
+  version: "1.0"
+paths:
+  /users:
+    get:
+      description: Get list of users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+      summary: List Users
+      tags:
+      - users
+swagger: "2.0"
