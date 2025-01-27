@@ -32,3 +32,5 @@ sudo apt install golang-go
 ```
  CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o apiconnector.out
 ```
+
+go install github.com/swaggo/swag/cmd/swag@latest
