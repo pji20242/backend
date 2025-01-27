@@ -1,3 +1,8 @@
+# to download it: 
+
+```
+sudo apt install golang-go
+```
 
 # to compile it: 
 ```

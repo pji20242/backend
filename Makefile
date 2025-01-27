@@ -7,8 +7,10 @@ start:
 	docker compose up & 
 
 clean:
-	docker images -q | xargs docker rmi -f
-	docker ps -a -q | xargs docker rm
+	docker compose down 
+	docker rm -f $(docker ps -aq) 
+	docker rmi -f $(docker images -aq)
 	docker volume rm $(docker volume ls -q)
+
 
 erase: stop clean start

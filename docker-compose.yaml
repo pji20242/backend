@@ -7,20 +7,7 @@ services:
     restart: always
     volumes:
       - ./mqtt-broker/mosquitto.cfg:/mosquitto/config/mosquitto.conf
-# ========================================================================================================
-
-  grafana-server:
-    container_name: grafana-server
-    image: grafana/grafana:9.3.2-ubuntu
-    restart: always
-    user: "0:1000"
-    volumes:
-      - "./grafana/grafanadata:/var/lib/grafana"
-    env_file:
-      - ./env_vars/.env_grafana
-    ports:
-      - "3000:3000"
-# ========================================================================================================
+# =======================================================================================================
 
   database:
     environment:

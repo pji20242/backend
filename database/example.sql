@@ -1,4 +1,3 @@
-CREATE DATABASE IF NOT EXISTS pjiot;
 USE pjiot;
 
 -- Tabela cooperativa
@@ -8,12 +7,6 @@ CREATE TABLE cooperativa (
     email VARCHAR(100)
 );
 
--- Tabela privilégio
-CREATE TABLE privilegio (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    descricao VARCHAR(50) NOT NULL
-);
-
 -- Tabela usuario
 CREATE TABLE usuario (
     matricula INT PRIMARY KEY,
@@ -21,19 +14,8 @@ CREATE TABLE usuario (
     email VARCHAR(100) NOT NULL UNIQUE,
     senha VARCHAR(100) NOT NULL,
     user VARCHAR(50) NOT NULL,
-    ativo BOOLEAN DEFAULT TRUE,
+    ativo BOOLEAN DEFAULT TRUE
     licencas VARCHAR(50)
-);
-
--- Tabela dispositivo
-CREATE TABLE dispositivo (
-    uuid CHAR(36) PRIMARY KEY,
-    hw_version VARCHAR(50),
-    fw_version VARCHAR(50),
-    latitude DECIMAL(9, 6),
-    longitude DECIMAL(9, 6),
-    peso DECIMAL(10, 2),
-    alt DECIMAL(9, 6)
 );
 
 -- Tabela usuario_cooperativa
@@ -45,6 +27,23 @@ CREATE TABLE usuario_cooperativa (
     FOREIGN KEY (matricula) REFERENCES usuario(matricula) ON DELETE CASCADE,
     FOREIGN KEY (cnpj) REFERENCES cooperativa(cnpj) ON DELETE CASCADE,
     FOREIGN KEY (idPrivilegio) REFERENCES privilegio(id) ON DELETE CASCADE
+);
+
+-- Tabela privilégio
+CREATE TABLE privilegio (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    descricao VARCHAR(50) NOT NULL
+);
+
+-- Tabela dispositivo
+CREATE TABLE dispositivo (
+    uuid CHAR(36) PRIMARY KEY,
+    hw_version VARCHAR(50),
+    fw_version VARCHAR(50),
+    lat DECIMAL(9, 6),
+    long DECIMAL(9, 6),
+    peso DECIMAL(10, 2)
+    alt DECIMAL(9, 6)
 );
 
 -- Relacionamento dispositivo-usuario (licenciado)
@@ -82,3 +81,4 @@ CREATE TABLE dados (
 CREATE USER 'connectoruser'@'%' IDENTIFIED BY 'connectorpasswrd';
 GRANT ALL PRIVILEGES ON pjiot.* TO 'connectoruser'@'%';
 FLUSH PRIVILEGES;
+
