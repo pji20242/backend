@@ -6,6 +6,7 @@ CREATE TABLE cooperativa (
     cnpj CHAR(14) PRIMARY KEY,
     endereco VARCHAR(255),
     email VARCHAR(100)
+    nome VARCHAR(100) NOT NULL,
 );
 
 -- Tabela privilégio
@@ -52,7 +53,7 @@ CREATE TABLE dispositivo_usuario (
     matricula INT,
     uuid CHAR(36),
     licenciado BOOLEAN DEFAULT TRUE,
-    PRIMARY KEY (matricula, uuid),
+    PRIMARY KEY (uuid),
     FOREIGN KEY (matricula) REFERENCES usuario(matricula) ON DELETE CASCADE,
     FOREIGN KEY (uuid) REFERENCES dispositivo(uuid) ON DELETE CASCADE
 );

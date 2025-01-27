@@ -1,14 +1,12 @@
 services:
-# ========================================================================================================
-
   mqtt-broker:
     container_name: mqtt-broker
     image: eclipse-mosquitto
     restart: always
     volumes:
       - ./mqtt-broker/mosquitto.cfg:/mosquitto/config/mosquitto.conf
-# =======================================================================================================
 
+# =======================================================================================================
   database:
     environment:
       MYSQL_DATABASE: pjiot
@@ -22,8 +20,8 @@ services:
       - mysql_data:/var/lib/mysql
     ports:
       - "3306:3306"
-# ========================================================================================================
 
+# ========================================================================================================
   connector:
     build:
       context: .
@@ -33,6 +31,16 @@ services:
     depends_on:
       - mqtt-broker
     restart: always
+
+# ========================================================================================================
+  apiconnector:
+    build:
+      context: .
+      dockerfile: ./api/Dockerfile
+    volumes:
+      - ./api/apiconnector.out:/apiconnector.out:rw
+    restart: always
+
 # ========================================================================================================
   reverse-proxy:
     depends_on:
@@ -47,6 +55,7 @@ services:
       - ./reverse-proxy/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt/live/vm0.pji3.sj.ifsc.edu.br/fullchain.pem:/etc/nginx/fullchain.pem:ro
       - /etc/letsencrypt/live/vm0.pji3.sj.ifsc.edu.br/privkey.pem:/etc/nginx/privkey.pem:ro
+
 # ========================================================================================================
 #  frontend:
 #    image: node
