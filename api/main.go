@@ -23,6 +23,7 @@ func main() {
 	v1 := r.Group("/api/v1")
 	{
 		v1.GET("/users", handlers.ListUsers)
+		v1.GET("/cooperativas", handlers.ListCooperativas)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
