@@ -24,6 +24,7 @@ func main() {
 	{
 		v1.GET("/users", handlers.ListUsers)
 		v1.GET("/cooperativas", handlers.ListCooperativas)
+		v1.GET("/devices", handlers.ListDevices)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
