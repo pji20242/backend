@@ -1,5 +1,53 @@
 basePath: /api/v1
 definitions:
+  handlers.DeviceMapResponse:
+    properties:
+      latitude:
+        type: number
+      longitude:
+        type: number
+      peso:
+        type: number
+      uuid:
+        type: string
+    type: object
+  models.Cooperativa:
+    properties:
+      cnpj:
+        type: string
+      email:
+        type: string
+      endereco:
+        type: string
+      nome:
+        type: string
+    type: object
+  models.Data:
+    properties:
+      id_sensor:
+        type: integer
+      timestamp:
+        type: string
+      valor:
+        type: number
+    type: object
+  models.Device:
+    properties:
+      altitude:
+        type: number
+      firmware_version:
+        type: string
+      hardware_version:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      peso:
+        type: number
+      uuid:
+        type: string
+    type: object
   models.User:
     properties:
       ativo:
@@ -15,14 +63,88 @@ definitions:
     type: object
 host: localhost:8080
 info:
-  contact: {}
-  description: API de exemplo em Go com Swagger
-  title: Minha API em Go
+  contact:
+    email: arthurbarcella.ifsc@gmail.com
+    name: arthurcadore
+    url: arthurcadore.github.io
+  description: Esta API permite interações com dispositivos e usuários do sistema
+    AgroTech
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: API para Sistema AgroTech
   version: "1.0"
 paths:
+  /cooperativas:
+    get:
+      description: Obtém a lista de todas as cooperativas
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Cooperativa'
+            type: array
+      summary: Lista cooperativas
+      tags:
+      - cooperativas
+  /devices:
+    get:
+      description: Obtém a lista de todos os dispositivos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Device'
+            type: array
+      summary: Lista dispositivos
+      tags:
+      - devices
+  /devices/{uuid}:
+    get:
+      description: Obtém os dados de um dispositivo específico pelo UUID
+      parameters:
+      - description: UUID do dispositivo
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Data'
+            type: array
+      summary: Lista dados do dispositivo
+      tags:
+      - devices
+  /map:
+    get:
+      description: Retorna os dispositivos com as colunas UUID, LATITUDE, LONGITUDE
+        e PESO
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.DeviceMapResponse'
+            type: array
+      summary: Lista todos os dispositivos com localização e peso
+      tags:
+      - devices
   /users:
     get:
-      description: Get list of users
+      description: Obtém a lista de usuários
       produces:
       - application/json
       responses:
@@ -32,7 +154,7 @@ paths:
             items:
               $ref: '#/definitions/models.User'
             type: array
-      summary: List Users
+      summary: Lista usuários
       tags:
       - users
 swagger: "2.0"

@@ -9,22 +9,131 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "arthurcadore",
+            "url": "arthurcadore.github.io",
+            "email": "arthurbarcella.ifsc@gmail.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/cooperativas": {
+            "get": {
+                "description": "Obtém a lista de todas as cooperativas",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cooperativas"
+                ],
+                "summary": "Lista cooperativas",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Cooperativa"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/devices": {
+            "get": {
+                "description": "Obtém a lista de todos os dispositivos",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "devices"
+                ],
+                "summary": "Lista dispositivos",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Device"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/devices/{uuid}": {
+            "get": {
+                "description": "Obtém os dados de um dispositivo específico pelo UUID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "devices"
+                ],
+                "summary": "Lista dados do dispositivo",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID do dispositivo",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Data"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/map": {
+            "get": {
+                "description": "Retorna os dispositivos com as colunas UUID, LATITUDE, LONGITUDE e PESO",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "devices"
+                ],
+                "summary": "Lista todos os dispositivos com localização e peso",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.DeviceMapResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
-                "description": "Get list of users",
+                "description": "Obtém a lista de usuários",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "List Users",
+                "summary": "Lista usuários",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -40,6 +149,80 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlers.DeviceMapResponse": {
+            "type": "object",
+            "properties": {
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "peso": {
+                    "type": "number"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Cooperativa": {
+            "type": "object",
+            "properties": {
+                "cnpj": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "endereco": {
+                    "type": "string"
+                },
+                "nome": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Data": {
+            "type": "object",
+            "properties": {
+                "id_sensor": {
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "valor": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.Device": {
+            "type": "object",
+            "properties": {
+                "altitude": {
+                    "type": "number"
+                },
+                "firmware_version": {
+                    "type": "string"
+                },
+                "hardware_version": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "peso": {
+                    "type": "number"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
         "models.User": {
             "type": "object",
             "properties": {
@@ -69,8 +252,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "Minha API em Go",
-	Description:      "API de exemplo em Go com Swagger",
+	Title:            "API para Sistema AgroTech",
+	Description:      "Esta API permite interações com dispositivos e usuários do sistema AgroTech",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

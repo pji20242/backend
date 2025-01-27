@@ -37,3 +37,10 @@ func GetDeviceData(c *gin.Context) {
 
 	c.JSON(http.StatusOK, data)
 }
+
+type DataResponse struct {
+	Timestamp string  `json:"timestamp"`
+	IDSensor  int     `json:"id_sensor"`
+	Valor     float64 `json:"valor"`
+}
+
