@@ -32,12 +32,19 @@ func main() {
 		v1.GET("/devices", handlers.ListDevices)
 		v1.GET("/devices/:uuid", handlers.GetDeviceData)
 		v1.GET("/map", handlers.GetDeviceMap)
+		v1.GET("/sensores", handlers.ListSensors)
 		
 		// Endpoints para POST
 		v1.POST("/cooperativas", handlers.CreateCooperativa)
+		v1.POST("/devices", handlers.CreateDevice)
+		v1.POST("/users", handlers.CreateUser)
+		v1.POST("/sensores", handlers.CreateSensor)
 
 		// Endpoints para DELETE
-		v1.DELETE("/cooperativas/:cnpj", handlers.DeleteCooperativa) 
+		v1.DELETE("/cooperativas/:cnpj", handlers.DeleteCooperativa)
+		v1.DELETE("/devices/:uuid", handlers.DeleteDevice)
+		v1.DELETE("/users/:matricula", handlers.DeleteUser)
+		v1.DELETE("/devices/:uuid/sensores/:id", handlers.DeleteSensor)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
