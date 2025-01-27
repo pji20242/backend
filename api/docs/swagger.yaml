@@ -48,17 +48,30 @@ definitions:
       uuid:
         type: string
     type: object
+  models.Sensors:
+    properties:
+      id:
+        type: integer
+      tipo:
+        type: string
+      unidade:
+        type: string
+      uuid:
+        type: string
+    type: object
   models.User:
     properties:
       ativo:
         type: boolean
       email:
         type: string
+      licencas:
+        type: integer
       matricula:
         type: integer
       nome:
         type: string
-      privilegio:
+      user:
         type: string
     type: object
 host: localhost:8080
@@ -162,6 +175,37 @@ paths:
       summary: Lista dispositivos
       tags:
       - devices
+  /devices/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deleta um dispositivo do banco de dados
+      parameters:
+      - description: ID do dispositivo
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Deleta um dispositivo
+      tags:
+      - devices
   /devices/{uuid}:
     get:
       description: Obtém os dados de um dispositivo específico pelo UUID
@@ -183,6 +227,44 @@ paths:
       summary: Lista dados do dispositivo
       tags:
       - devices
+  /devices/{uuid}/sensores/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deleta um sensor de um dispositivo com base no UUID do dispositivo
+        e ID do sensor
+      parameters:
+      - description: UUID do dispositivo
+        in: path
+        name: uuid
+        required: true
+        type: string
+      - description: ID do sensor
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Deleta um sensor de um dispositivo específico
+      tags:
+      - sensores
   /map:
     get:
       description: Retorna os dispositivos com as colunas UUID, LATITUDE, LONGITUDE
@@ -199,6 +281,47 @@ paths:
       summary: Lista todos os dispositivos com localização e peso
       tags:
       - devices
+  /sensores:
+    get:
+      description: Obtém a lista de todos os sensores
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Sensors'
+            type: array
+      summary: Lista sensores
+      tags:
+      - sensores
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo sensor no banco de dados
+      parameters:
+      - description: Novo Sensor
+        in: body
+        name: sensor
+        required: true
+        schema:
+          $ref: '#/definitions/models.Sensors'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Sensors'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Cria um novo sensor
+      tags:
+      - sensores
   /users:
     get:
       description: Obtém a lista de usuários
@@ -212,6 +335,64 @@ paths:
               $ref: '#/definitions/models.User'
             type: array
       summary: Lista usuários
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo usuário no banco de dados
+      parameters:
+      - description: Novo Usuário
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Cria um novo usuário
+      tags:
+      - users
+  /users/{matricula}:
+    delete:
+      consumes:
+      - application/json
+      description: Deleta um usuário do banco de dados
+      parameters:
+      - description: Matricula do usuário
+        in: path
+        name: matricula
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Deleta um usuário
       tags:
       - users
 swagger: "2.0"

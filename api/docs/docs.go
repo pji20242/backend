@@ -154,6 +154,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/devices/{id}": {
+            "delete": {
+                "description": "Deleta um dispositivo do banco de dados",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "devices"
+                ],
+                "summary": "Deleta um dispositivo",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID do dispositivo",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/devices/{uuid}": {
             "get": {
                 "description": "Obtém os dados de um dispositivo específico pelo UUID",
@@ -186,6 +232,60 @@ const docTemplate = `{
                 }
             }
         },
+        "/devices/{uuid}/sensores/{id}": {
+            "delete": {
+                "description": "Deleta um sensor de um dispositivo com base no UUID do dispositivo e ID do sensor",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensores"
+                ],
+                "summary": "Deleta um sensor de um dispositivo específico",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID do dispositivo",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID do sensor",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/map": {
             "get": {
                 "description": "Retorna os dispositivos com as colunas UUID, LATITUDE, LONGITUDE e PESO",
@@ -209,6 +309,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/sensores": {
+            "get": {
+                "description": "Obtém a lista de todos os sensores",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensores"
+                ],
+                "summary": "Lista sensores",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Sensors"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Cria um novo sensor no banco de dados",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sensores"
+                ],
+                "summary": "Cria um novo sensor",
+                "parameters": [
+                    {
+                        "description": "Novo Sensor",
+                        "name": "sensor",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Sensors"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Sensors"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "description": "Obtém a lista de usuários",
@@ -227,6 +389,92 @@ const docTemplate = `{
                             "items": {
                                 "$ref": "#/definitions/models.User"
                             }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Cria um novo usuário no banco de dados",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Cria um novo usuário",
+                "parameters": [
+                    {
+                        "description": "Novo Usuário",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{matricula}": {
+            "delete": {
+                "description": "Deleta um usuário do banco de dados",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Deleta um usuário",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Matricula do usuário",
+                        "name": "matricula",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -308,6 +556,23 @@ const docTemplate = `{
                 }
             }
         },
+        "models.Sensors": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "tipo": {
+                    "type": "string"
+                },
+                "unidade": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
         "models.User": {
             "type": "object",
             "properties": {
@@ -317,13 +582,16 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "licencas": {
+                    "type": "integer"
+                },
                 "matricula": {
                     "type": "integer"
                 },
                 "nome": {
                     "type": "string"
                 },
-                "privilegio": {
+                "user": {
                     "type": "string"
                 }
             }
