@@ -26,11 +26,18 @@ func main() {
 
 	v1 := r.Group("/api/v1")
 	{
+		// Endpoints para GET
 		v1.GET("/users", handlers.ListUsers)
 		v1.GET("/cooperativas", handlers.ListCooperativas)
 		v1.GET("/devices", handlers.ListDevices)
 		v1.GET("/devices/:uuid", handlers.GetDeviceData)
 		v1.GET("/map", handlers.GetDeviceMap)
+		
+		// Endpoints para POST
+		v1.POST("/cooperativas", handlers.CreateCooperativa)
+
+		// Endpoints para DELETE
+		v1.DELETE("/cooperativas/:cnpj", handlers.DeleteCooperativa) 
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

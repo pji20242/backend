@@ -44,6 +44,91 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Cria uma nova cooperativa no banco de dados",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cooperativas"
+                ],
+                "summary": "Cria uma nova cooperativa",
+                "parameters": [
+                    {
+                        "description": "Nova Cooperativa",
+                        "name": "cooperativa",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Cooperativa"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Cooperativa"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/cooperativas/{cnpj}": {
+            "delete": {
+                "description": "Deleta uma cooperativa com base no CNPJ",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cooperativas"
+                ],
+                "summary": "Deleta uma cooperativa",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "CNPJ da Cooperativa",
+                        "name": "cnpj",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deletado com sucesso",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
             }
         },
         "/devices": {

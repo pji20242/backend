@@ -90,6 +90,63 @@ paths:
       summary: Lista cooperativas
       tags:
       - cooperativas
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova cooperativa no banco de dados
+      parameters:
+      - description: Nova Cooperativa
+        in: body
+        name: cooperativa
+        required: true
+        schema:
+          $ref: '#/definitions/models.Cooperativa'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Cooperativa'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Cria uma nova cooperativa
+      tags:
+      - cooperativas
+  /cooperativas/{cnpj}:
+    delete:
+      consumes:
+      - application/json
+      description: Deleta uma cooperativa com base no CNPJ
+      parameters:
+      - description: CNPJ da Cooperativa
+        in: path
+        name: cnpj
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Deletado com sucesso
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Deleta uma cooperativa
+      tags:
+      - cooperativas
   /devices:
     get:
       description: Obtém a lista de todos os dispositivos
