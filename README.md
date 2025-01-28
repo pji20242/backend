@@ -5,16 +5,23 @@ Código fonte da infraestrutura e aplicação do servidor da solução
 
 ```mermaid
 flowchart TD
-    DB([Banco de dados])
-        DB --- backend
-
     mqtt([Broker MQTT])
-        mqtt --- backend
-    backend([App Backend GO])
-        
-    frontend([Frontend HTTP Server / API Restful])
-        frontend --- backend
+    DB([Banco de dados])
+    connector([Backend Connector])
+    APIconnector([API frontend Connector])    
+    frontend([Frontend HTTP Server])
+
+    mqtt --> connector
+    connector --> DB
+    APIconnector <--> DB
+    APIconnector <--> frontend
 ```
+
+## Estrutura do banco
+
+Imagem da estrutura do banco de dados:
+
+![Estrutura do banco de dados](database/diagram.png)
 
 ## Mensageria 
 
@@ -46,6 +53,14 @@ O mapeamento de valores do parâmetro `idsensor` no banco é o seguinte:
 6 - Tensão
 ```
 
+## Documentação da API de backend
+
+A documentação da API de backend pode ser acessada em /api/docs/swagger.yaml.
+
+Para visualiza-la, acesse o site [Swagger Editor](https://editor.swagger.io/) e cole o conteúdo do arquivo.
+
+![Exemplo de documentação da API](api/images/example.png)
+
 ## Arquivos sensíveis
 
 ### Banco de dados
@@ -59,52 +74,13 @@ senha
 - `database/setup.sql`: preparação do banco de dados. Exemplo:
 
 ```sql
-CREATE TABLE usuario (
-    matricula INT PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    senha VARCHAR(100) NOT NULL,
-    privilegio VARCHAR(50),
-    ativo BOOLEAN DEFAULT TRUE
-);
+CREATE DATABASE IF NOT EXISTS pjiot;
+USE pjiot;
 
-CREATE TABLE dispositivo (
-    uuid CHAR(36) PRIMARY KEY,
-    hwversion VARCHAR(50),
-    swversion VARCHAR(50),
-    latitude DECIMAL(9, 6),
-    longitude DECIMAL(9, 6),
-    altitude DECIMAL(9, 2)
-);
-
-CREATE TABLE dispositivo_usuario (
-    matricula INT,
-    uuid CHAR(36),
-    PRIMARY KEY (matricula, uuid),
-    FOREIGN KEY (matricula) REFERENCES usuario(matricula) ON DELETE CASCADE,
-    FOREIGN KEY (uuid) REFERENCES dispositivo(uuid) ON DELETE CASCADE
-);
-
-CREATE TABLE sensor (
-    idSensor INT,
-    uuid CHAR(36),
-    tipo VARCHAR(50),
-    unidade VARCHAR(20),
-    PRIMARY KEY (idSensor, uuid),
-    UNIQUE (uuid, idSensor),  -- Adicionada uma restrição UNIQUE composta para (uuid, idSensor)
-    FOREIGN KEY (uuid) REFERENCES dispositivo(uuid) ON DELETE CASCADE
-);
-
-
-CREATE TABLE dados (
-    ts TIMESTAMP,
-    uuid CHAR(36),
-    idSensor INT,
-    valor DECIMAL(10, 2),
-    PRIMARY KEY (ts, uuid, idSensor),
-    FOREIGN KEY (uuid, idSensor) REFERENCES sensor(uuid, idSensor) ON DELETE CASCADE
-);
-
+-- Usuário para conexão
+CREATE USER 'connectoruser'@'%' IDENTIFIED BY 'connectorpasswrd';
+GRANT ALL PRIVILEGES ON pjiot.* TO 'connectoruser'@'%';
+FLUSH PRIVILEGES;
 ```
 
 ### Broker MQTT:
@@ -116,3 +92,26 @@ MQTT_BROKER=mqtt-broker
 MQTT_BROKER=mosquitto
 MQTT_PORT=1883
 ```
+
+# Inicialização
+
+## Compilar os arquivos de connector
+
+```bash
+cd connector/ 
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o apiconnector.out
+```
+
+## Compilar os arquivos de APIconnector
+
+```bash
+cd APIconnector/
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o apiconnector.out
+```
+
+## Inicializar os containers
+
+```bash
+make
+```
+---
