@@ -5,8 +5,8 @@ USE pjiot;
 CREATE TABLE cooperativa (
     cnpj CHAR(14) PRIMARY KEY,
     endereco VARCHAR(255),
-    email VARCHAR(100)
-    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    nome VARCHAR(100) NOT NULL
 );
 
 -- Tabela privilégio
