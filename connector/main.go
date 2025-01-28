@@ -17,7 +17,7 @@ var db *sql.DB
 
 func initDB() {
     var err error
-    db, err = sql.Open("mysql", "connectoruser:connectorpasswrd@tcp(database:3306)/pjiot")
+    db, err = sql.Open("mysql", "root:rootpass@tcp(database:3306)/pjiot")
     if err != nil {
         log.Fatalf("Erro ao conectar ao banco de dados: %v", err)
     }
