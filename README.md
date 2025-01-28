@@ -1,5 +1,6 @@
-# backend
-Código fonte da infraestrutura e aplicação do servidor da solução
+# Backend
+
+Código fonte da aplicação de backend do projeto AgroTech.
 
 ## Estrutura
 
