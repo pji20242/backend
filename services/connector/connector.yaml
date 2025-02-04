@@ -1,3 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: connector-pvc
+  namespace: pji3
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Mi
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,10 +28,26 @@ spec:
       labels:
         app: connector
     spec:
+      volumes:
+        - name: connector-storage
+          emptyDir: {}  # Volume temporário para o binário
+        - name: connector-pvc
+          persistentVolumeClaim:
+            claimName: connector-pvc  # PVC para armazenar o binário
+
+      initContainers:
+        - name: wait-for-database
+          image: busybox
+          command: ['sh', '-c', 'until nc -z database 3306; do echo waiting for database; sleep 2; done;']
+        
+        - name: wait-for-mqtt-broker
+          image: busybox
+          command: ['sh', '-c', 'until nc -z mqtt-broker 1883; do echo waiting for mqtt-broker; sleep 2; done;']
+
       containers:
-        - image: docker.io/alpine:3.12
-          name: connector
-          command: ["/connector.out"]
+        - name: connector
+          image: alpine:3.12
+          command: ["/mnt-storage/connector.out"]
           resources:
             requests:
               cpu: 100m
@@ -27,23 +56,20 @@ spec:
               cpu: 2
               memory: 512Mi
           volumeMounts:
-            - name: connector-connector-out
-              mountPath: /
-          restartPolicy: Always
-      volumes:
-        - name: connector-connector-out
-          configMap:
-            name: connector-connector-out
-            items:
-              - path: "connector.out"
-                key: connector.out
-      initContainers:
-        - name: wait-for-database
-          image: busybox
-          command: ['sh', '-c', 'until nc -z database 3306; do echo waiting for database; sleep 2; done;']
-        - name: wait-for-mqtt-broker
-          image: busybox
-          command: ['sh', '-c', 'until nc -z mqtt-broker 1883; do echo waiting for mqtt-broker; sleep 2; done;']
+            - name: connector-storage
+              mountPath: /mnt-storage
+
+      restartPolicy: Always
+
 ---
-
-
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: connector
+    protocol: mqtt
+  name: connector
+  namespace: pji3
+spec:
+  selector:
+    app: connector
