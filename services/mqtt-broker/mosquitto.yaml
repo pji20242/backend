@@ -7,10 +7,10 @@ metadata:
   name: mosquitto
   namespace: pji3
 spec:
+  replicas: 1
   selector: 
     matchLabels:
       app: mosquitto
-  replicas: 1
   template:
     metadata:
       labels:

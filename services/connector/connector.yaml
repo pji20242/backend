@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: connector
+  name: connector
+  namespace: pji3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: connector
+  template:
+    metadata:
+      labels:
+        app: connector
+    spec:
+      containers:
+        - image: docker.io/alpine:3.12
+          name: connector
+          command: ["/connector.out"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 2
+              memory: 512Mi
+          volumeMounts:
+            - name: connector-connector-out
+              mountPath: /
+          restartPolicy: Always
+      volumes:
+        - name: connector-connector-out
+          configMap:
+            name: connector-connector-out
+            items:
+              - path: "connector.out"
+                key: connector.out
+      initContainers:
+        - name: wait-for-database
+          image: busybox
+          command: ['sh', '-c', 'until nc -z database 3306; do echo waiting for database; sleep 2; done;']
+        - name: wait-for-mqtt-broker
+          image: busybox
+          command: ['sh', '-c', 'until nc -z mqtt-broker 1883; do echo waiting for mqtt-broker; sleep 2; done;']
+---
+
+
