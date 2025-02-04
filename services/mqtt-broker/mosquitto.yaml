@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mosquitto
+    protocol: mqtt
+  name: mosquitto
+  namespace: pji3
+spec:
+  selector: 
+    matchLabels:
+      app: mosquitto
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mosquitto
+        protocol: mqtt
+    spec:
+      containers:
+        - image: docker.io/cticsjeifsc/mosquitto:latest
+          name: mosquitto
+          ports:
+            - containerPort: 1883
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 2
+              memory: 512Mi
+          volumeMounts:
+            - name: mosquitto-mosquitto-conf
+              mountPath: /mosquitto/config/
+      restartPolicy: Always
+      volumes:
+      - name: mosquitto-mosquitto-conf
+        configMap:
+          name: mosquitto-mosquitto-conf
+          items:
+          - path: "mosquitto.conf"
+            key: mosquitto.conf
+
+--- 
+
+apiVersion: apps/v1
+kind: Ingress
+metadata:
+  labels:
+    app: mosquitto
+    protocol: mqtt
+  name: mosquitto
+  namespace: pji3
+spec:
+  tls:
+    - hosts:
+        - mqtt.sj.ifsc.edu.br
+      secretName: tls-ifsc-sje
+  rules:
+    - host: mqtt.sj.ifsc.edu.br
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: mosquitto-ws
+              servicePort: 8080
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mosquitto
+    protocol: mqtt
+  name: mosquitto-mqtt
+  namespace: pji3
+spec:
+  type: ExternalName
+  externalName: vm1.pji3.sj.ifsc.edu.br
+  ports:
+    - name: mqtt
+      port: 1883
+      protocol: TCP
+      targetPort: 1883
+  selector:
+    app: mosquitto
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mosquitto
+    protocol: mqtt
+  name: mosquitto-ws
+  namespace: pji3
+spec:
+  ports:
+    - name: mqtt-ws
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: mosquitto
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: mosquitto
+    protocol: mqtt
+  name: mosquitto-mosquitto-conf
+  namespace: pji3
+data:
+  mosquitto.conf: |-
+    persistence true
+    persistence_location /mosquitto/data/
+    log_dest file /mosquitto/log/mosquitto.log
+    autosave_interval 60
+    listener 1883
+    listener 8080
+    protocol websockets
+    allow_anonymous true

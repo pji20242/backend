@@ -1,16 +1,16 @@
-all: stop start
+all: stop start view
 
 stop:
-	docker compose down
+	make -C components/mqtt-broker stop
+	make -C kubernetes stop
 
 start:
-	docker compose up & 
+	make -C kubernetes start
+	make -C components/mqtt-broker start
 
-clean:
-	docker compose down 
-	docker rm -f $(docker ps -aq) 
-	docker rmi -f $(docker images -aq)
-	docker volume rm $(docker volume ls -q)
+view:
+	kubectl get ns
+	kubectl get svc -n ingress-nginx
 
-
-erase: stop clean start
+view-all:
+	kubectl get all --all-namespaces
