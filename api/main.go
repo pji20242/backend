@@ -31,6 +31,7 @@ func main() {
 		v1.GET("/cooperativas", handlers.ListCooperativas)
 		v1.GET("/devices", handlers.ListDevices)
 		v1.GET("/devices/:uuid", handlers.GetDeviceData)
+		v1.GET("/devices/:uuid/sensor/:idSensor", handlers.GetSensorData) // Novo endpoint para sensor específico
 		v1.GET("/map", handlers.GetDeviceMap)
 		v1.GET("/sensores", handlers.ListSensors)
 		
