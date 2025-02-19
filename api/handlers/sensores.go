@@ -30,6 +30,34 @@ func ListSensors(c *gin.Context) {
 	c.JSON(http.StatusOK, sensors)
 }
 
+// @Summary Lista sensores de um dispositivo
+// @Description Retorna a lista de sensores do dispositivo com base no UUID fornecido
+// @Tags sensores
+// @Accept json
+// @Produce json
+// @Param uuid path string true "UUID do dispositivo"
+// @Success 200 {array} models.Sensors
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/sensores/{uuid} [get]
+func GetSensorsByUUID(c *gin.Context) {
+	deviceUUID := c.Param("uuid")
+	
+	var sensors []models.Sensors
+	result := database.GetDB().Where("uuid = ?", deviceUUID).Find(&sensors)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+	
+	if len(sensors) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Nenhum sensor encontrado para esse dispositivo"})
+		return
+	}
+	
+	c.JSON(http.StatusOK, sensors)
+}
+
 // @Summary Cria um novo sensor
 // @Description Cria um novo sensor no banco de dados
 // @Tags sensores
