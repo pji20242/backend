@@ -34,7 +34,10 @@ func main() {
 		v1.GET("/devices/:uuid/sensor/:idSensor", handlers.GetSensorData) // Novo endpoint para sensor específico
 		v1.GET("/map", handlers.GetDeviceMap)
 		v1.GET("/sensores", handlers.ListSensors)
-		
+
+		// Novo endpoint para retornar os sensores de um dispositivo específico pelo UUID
+		v1.GET("/sensores/:uuid", handlers.GetSensorsByUUID)
+
 		// Endpoints para POST
 		v1.POST("/cooperativas", handlers.CreateCooperativa)
 		v1.POST("/devices", handlers.CreateDevice)
