@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pji20242/backend/api/database"
@@ -16,12 +17,12 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-clientID := os.Getenv("CLIENT_ID")
 
 
 // AuthMiddleware extrai o token do header Authorization e o valida.
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		clientID := os.Getenv("CLIENT_ID")
 		// Verifica se o CLIENT_ID foi definido
 		if clientID == "" {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "CLIENT_ID não definido"})
