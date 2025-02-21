@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -14,33 +13,33 @@ import (
 	"github.com/pji20242/backend/api/database"
 	"github.com/pji20242/backend/api/handlers"
 	"github.com/pji20242/backend/api/models"
-	"golang.org/x/oauth2"        // Importação correta do pacote OAuth2
-	"golang.org/x/oauth2/google" // Importação para configuração do Google OAuth2
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+
+	// Necessário para comparar erros de busca
+	"gorm.io/gorm"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// AuthMiddleware extrai o token do header Authorization e o valida.
+// AuthMiddleware extrai e valida o token, e cria o usuário se não existir.
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientID := os.Getenv("CLIENT_ID")
 		clientSecret := os.Getenv("CLIENT_SECRET")
 
-		// Verifica se as variáveis de ambiente estão definidas
 		if clientID == "" || clientSecret == "" {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "CLIENT_ID ou CLIENT_SECRET não definidos"})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "CLIENT_ID ou CLIENT_SECRET não definidos"})
 			return
 		}
 
-		// Extrai o header Authorization
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header não informado"})
 			return
 		}
 
-		// Espera o formato "Bearer <token>"
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Formato do header Authorization inválido"})
@@ -53,14 +52,14 @@ func AuthMiddleware() gin.HandlerFunc {
 		config := &oauth2.Config{
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
-			RedirectURL:  "postmessage",   // Usado para troca de código
-			Endpoint:     google.Endpoint, // Endpoint do Google OAuth2
+			RedirectURL:  "postmessage", // Usado para troca de código
+			Endpoint:     google.Endpoint,
 		}
 
 		// Troca o código pelo token
 		token, err := config.Exchange(context.Background(), code)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Falha ao trocar código por token: %v", err)})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Falha ao trocar código por token: %v", err)})
 			return
 		}
 
@@ -71,68 +70,76 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		parser := new(jwt.Parser)
-		// Parse the token without verifying the signature
 		parsed, _, err := parser.ParseUnverified(idToken, jwt.MapClaims{})
 		if err != nil {
-			log.Fatalf("Error parsing token: %v", err)
+			log.Printf("Error parsing token: %v", err)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error parsing token: %v", err)})
+			return
 		}
 
 		claims, ok := parsed.Claims.(jwt.MapClaims)
 		if !ok {
-			log.Fatal("Failed to parse token claims")
+			log.Printf("Failed to parse token claims")
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse token claims"})
+			return
 		}
 
 		email, emailOk := claims["email"].(string)
 		name, nameOk := claims["name"].(string)
 		matricula, matriculaOk := claims["sub"].(string)
 		if !emailOk || !nameOk || !matriculaOk {
-			log.Fatal("Token does not contain email and/or name, and/or matricula")
+			log.Printf("Token não contém os campos necessários")
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Token não contém email e/ou name e/ou matricula"})
+			return
 		}
 
-		fmt.Print(email)
-		fmt.Print(name)
-		fmt.Print(matricula)
+		log.Printf("Dados extraídos do token - Email: %s, Nome: %s, Matricula: %s", email, name, matricula)
 
-		// converte matricula para int
-		matriculaInt, err := strconv.Atoi(matricula)
-		if err != nil {
-			log.Fatalf("Error converting matricula to int: %v", err)
-		}
-
-		// Busca o usuário no banco de dados pelo email
+		// Busca o usuário pelo email
 		var user models.User
-		if err := database.GetDB().Where("email = ?", email).First(&user).Error; err != nil {
-			// Se o usuário não existir, cria um novo usuário
-			user = models.User{
-				Nome:      name, // Assumindo que o nome está no payload
-				Email:     email,
-				User:      strings.Split(email, "@")[0], // Gera um nome de usuário a partir do email
-				Senha:     "",                           // Senha pode ser deixada em branco ou gerada automaticamente
-				Ativo:     true,
-				Matricula: matriculaInt,
-			}
-			if err := database.GetDB().Create(&user).Error; err != nil {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Falha ao criar usuário"})
+		result := database.GetDB().Where("email = ?", email).First(&user)
+		if result.Error != nil {
+			if result.Error == gorm.ErrRecordNotFound {
+				// Se não encontrado, cria o usuário
+				user = models.User{
+					Nome:      name,
+					Email:     email,
+					User:      strings.Split(email, "@")[0],
+					Senha:     "",
+					Ativo:     true,
+					Matricula: matricula,
+				}
+				if err := database.GetDB().Create(&user).Error; err != nil {
+					log.Printf("Erro ao criar usuário: %v", err)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Falha ao criar usuário"})
+					return
+				}
+				log.Printf("Usuário criado com sucesso: %+v", user)
+			} else {
+				log.Printf("Erro ao buscar usuário: %v", result.Error)
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar usuário"})
 				return
 			}
+		} else {
+			log.Printf("Usuário já existe: %+v", user)
 		}
 
-		// Armazena o usuário no contexto para uso posterior nas rotas
+		// Armazena o usuário no contexto para uso posterior
 		c.Set("user", user)
 		c.Next()
 	}
 }
 
 func main() {
+	// Inicializa o banco de dados com debug
 	database.InitDatabase()
 
 	r := gin.Default()
 
-	// Grupo para rotas da API v1
+	// Grupo de rotas com middleware de autenticação
 	v1 := r.Group("/api/v1")
 	v1.Use(AuthMiddleware())
 	{
-		// Rotas públicas
 		v1.GET("/map", handlers.GetDeviceMap)
 		v1.GET("/users", handlers.ListUsers)
 		v1.GET("/cooperativas", handlers.ListCooperativas)

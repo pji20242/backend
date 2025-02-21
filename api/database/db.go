@@ -17,6 +17,10 @@ func InitDatabase() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
+	// Ativa o modo debug para exibir as queries executadas
+	db = db.Debug()
+
+	// Migração dos modelos
 	db.AutoMigrate(&models.User{}, &models.Cooperativa{}, &models.Device{}, &models.Data{}, &models.Sensors{})
 	DB = db
 }

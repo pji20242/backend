@@ -12,4 +12,7 @@ clean:
 	docker rmi -f $(docker images -aq)
 	docker volume rm $(docker volume ls -q)
 
+restart:
+	docker compose restart apiconnector
+
 erase: stop clean start

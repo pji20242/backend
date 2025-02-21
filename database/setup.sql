@@ -17,7 +17,7 @@ CREATE TABLE privilegio (
 
 -- Tabela usuario
 CREATE TABLE usuario (
-    matricula INT PRIMARY KEY,
+    matricula VARCHAR(100) PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     senha VARCHAR(100) NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE dispositivo (
 
 -- Tabela usuario_cooperativa
 CREATE TABLE usuario_cooperativa (
-    matricula INT,
+    matricula VARCHAR(100),
     cnpj CHAR(14),
     idPrivilegio INT,
     PRIMARY KEY (matricula, cnpj),
@@ -50,7 +50,7 @@ CREATE TABLE usuario_cooperativa (
 
 -- Relacionamento dispositivo-usuario (licenciado)
 CREATE TABLE dispositivo_usuario (
-    matricula INT,
+    matricula VARCHAR(100),
     uuid CHAR(36),
     licenciado BOOLEAN DEFAULT TRUE,
     PRIMARY KEY (uuid),
