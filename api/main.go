@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,7 +24,6 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// AuthMiddleware extrai e valida o token, e cria o usuário se não existir.
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientID := os.Getenv("CLIENT_ID")
@@ -48,15 +48,13 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		code := parts[1]
 
-		// Configura o cliente OAuth2
 		config := &oauth2.Config{
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
-			RedirectURL:  "postmessage", // Usado para troca de código
+			RedirectURL:  "postmessage",
 			Endpoint:     google.Endpoint,
 		}
 
-		// Troca o código pelo token
 		token, err := config.Exchange(context.Background(), code)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Falha ao trocar código por token: %v", err)})
@@ -72,15 +70,15 @@ func AuthMiddleware() gin.HandlerFunc {
 		parser := new(jwt.Parser)
 		parsed, _, err := parser.ParseUnverified(idToken, jwt.MapClaims{})
 		if err != nil {
-			log.Printf("Error parsing token: %v", err)
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error parsing token: %v", err)})
+			log.Printf("Erro ao analisar token: %v", err)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Erro ao analisar token"})
 			return
 		}
 
 		claims, ok := parsed.Claims.(jwt.MapClaims)
 		if !ok {
-			log.Printf("Failed to parse token claims")
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse token claims"})
+			log.Printf("Falha ao converter claims do token")
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Falha ao converter claims do token"})
 			return
 		}
 
@@ -89,43 +87,44 @@ func AuthMiddleware() gin.HandlerFunc {
 		matricula, matriculaOk := claims["sub"].(string)
 		if !emailOk || !nameOk || !matriculaOk {
 			log.Printf("Token não contém os campos necessários")
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Token não contém email e/ou name e/ou matricula"})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Token não contém email, name ou matricula"})
 			return
 		}
 
 		log.Printf("Dados extraídos do token - Email: %s, Nome: %s, Matricula: %s", email, name, matricula)
 
-		// Busca o usuário pelo email
+		// Verifica se o usuário já existe no banco de dados
 		var user models.User
-		result := database.GetDB().Where("email = ?", email).First(&user)
-		if result.Error != nil {
-			if result.Error == gorm.ErrRecordNotFound {
-				// Se não encontrado, cria o usuário
-				user = models.User{
-					Nome:      name,
-					Email:     email,
-					User:      strings.Split(email, "@")[0],
-					Senha:     "",
-					Ativo:     true,
-					Matricula: matricula,
-				}
-				if err := database.GetDB().Create(&user).Error; err != nil {
-					log.Printf("Erro ao criar usuário: %v", err)
-					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Falha ao criar usuário"})
-					return
-				}
-				log.Printf("Usuário criado com sucesso: %+v", user)
-			} else {
-				log.Printf("Erro ao buscar usuário: %v", result.Error)
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar usuário"})
+		db := database.GetDB()
+		result := db.Where("email = ?", email).First(&user)
+
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// Usuário não encontrado, então cria um novo
+			user = models.User{
+				Nome:      name,
+				Email:     email,
+				User:      strings.Split(email, "@")[0],
+				Senha:     "",
+				Ativo:     true,
+				Matricula: matricula,
+			}
+			if err := db.Create(&user).Error; err != nil {
+				log.Printf("Erro ao criar usuário: %v", err)
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Falha ao criar usuário"})
 				return
 			}
+			log.Printf("Usuário criado com sucesso: %+v", user)
+		} else if result.Error != nil {
+			log.Printf("Erro ao buscar usuário: %v", result.Error)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar usuário"})
+			return
 		} else {
 			log.Printf("Usuário já existe: %+v", user)
 		}
 
-		// Armazena o usuário no contexto para uso posterior
+		// Armazena o usuário no contexto e libera acesso às rotas
 		c.Set("user", user)
+		log.Printf("Usuário armazenado no contexto: %+v", user)
 		c.Next()
 	}
 }

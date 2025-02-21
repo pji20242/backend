@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,18 +17,20 @@ import (
 // @Router /cooperativas [get]
 func ListCooperativas(c *gin.Context) {
 	var cooperativas []models.Cooperativa
+	log.Println("Iniciando a busca por cooperativas")
 	result := database.GetDB().Find(&cooperativas)
 
 	if result.Error != nil {
+		log.Printf("Erro ao consultar as cooperativas: %v", result.Error)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": result.Error.Error(),
 		})
 		return
 	}
 
+	log.Printf("Cooperativas encontradas: %v", cooperativas)
 	c.JSON(http.StatusOK, cooperativas)
 }
-
 
 // @Summary Cria uma nova cooperativa
 // @Description Cria uma nova cooperativa no banco de dados
