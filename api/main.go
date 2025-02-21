@@ -42,6 +42,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		code := parts[1]
+		log.Printf("Código de autorização extraído: %s", code)
 
 		config := &oauth2.Config{
 			ClientID:     clientID,
@@ -53,11 +54,13 @@ func AuthMiddleware() gin.HandlerFunc {
 		token, err := config.Exchange(context.Background(), code)
 		if err != nil {
 			log.Printf("Falha ao trocar código por token: %v", err)
+			// Aqui você pode continuar com o fluxo, mas sem bloquear a execução
 		}
 
+		// Verifica se o token contém o campo id_token
 		idToken, ok := token.Extra("id_token").(string)
 		if !ok {
-			log.Printf("Token JWT não encontrado")
+			log.Printf("Token JWT não encontrado ou malformado")
 		}
 
 		parser := new(jwt.Parser)
@@ -123,7 +126,7 @@ func main() {
 
 	// Grupo de rotas com middleware de autenticação
 	v1 := r.Group("/api/v1")
-	// v1.Use(AuthMiddleware())
+	v1.Use(AuthMiddleware())
 	{
 		v1.GET("/map", handlers.GetDeviceMap)
 		v1.GET("/users", handlers.ListUsers)
