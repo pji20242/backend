@@ -156,6 +156,7 @@ func main() {
 			protected.GET("/devices/:uuid", handlers.GetDeviceData)
 			protected.GET("/devices/:uuid/sensor/:idSensor", handlers.GetSensorData)
 			protected.GET("/sensores", handlers.ListSensors)
+			protected.GET("/sensores/:uuid", handlers.GetSensorsByUUID)
 			protected.POST("/cooperativas", handlers.CreateCooperativa)
 			protected.POST("/devices", handlers.CreateDevice)
 			protected.POST("/users", handlers.CreateUser)
