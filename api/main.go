@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 
@@ -24,13 +25,6 @@ import (
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		clientID := os.Getenv("CLIENT_ID")
-		clientSecret := os.Getenv("CLIENT_SECRET")
-
-		if clientID == "" || clientSecret == "" {
-			log.Printf("CLIENT_ID ou CLIENT_SECRET não definidos")
-		}
-
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			log.Printf("Authorization header não informado")
@@ -41,30 +35,12 @@ func AuthMiddleware() gin.HandlerFunc {
 			log.Printf("Formato do header Authorization inválido")
 		}
 
-		code := parts[1]
-		log.Printf("Código de autorização extraído: %s", code)
-
-		config := &oauth2.Config{
-			ClientID:     clientID,
-			ClientSecret: clientSecret,
-			RedirectURL:  "postmessage",
-			Endpoint:     google.Endpoint,
-		}
-
-		token, err := config.Exchange(context.Background(), code)
-		if err != nil {
-			log.Printf("Falha ao trocar código por token: %v", err)
-			// Aqui você pode continuar com o fluxo, mas sem bloquear a execução
-		}
-
-		// Verifica se o token contém o campo id_token
-		idToken, ok := token.Extra("id_token").(string)
-		if !ok {
-			log.Printf("Token JWT não encontrado ou malformado")
-		}
+		token := parts[1]
+		log.Printf("Código de autorização extraído: %s", token)
+		
 
 		parser := new(jwt.Parser)
-		parsed, _, err := parser.ParseUnverified(idToken, jwt.MapClaims{})
+		parsed, _, err := parser.ParseUnverified(token, jwt.MapClaims{})
 		if err != nil {
 			log.Printf("Erro ao analisar token: %v", err)
 		}
@@ -118,6 +94,47 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
+type AuthCode struct {
+	Code string `json:"code"`
+}
+
+func Authenticate(c *gin.Context ) {
+	clientID := os.Getenv("CLIENT_ID")
+	clientSecret := os.Getenv("CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == "" {
+		log.Printf("CLIENT_ID ou CLIENT_SECRET não definidos")
+	}
+	
+	config := &oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  "postmessage",
+		Endpoint:     google.Endpoint,
+	}
+	
+	// Recupera o código de autorização
+	var authCode AuthCode
+	if err := c.ShouldBindJSON(&authCode); err != nil {
+		log.Printf("Falha ao recuperar código de autorização: %v", err)
+		// Aqui você pode continuar com o fluxo, mas sem bloquear a execução
+	}
+	code := authCode.Code
+
+	token, err := config.Exchange(context.Background(), code)
+	if err != nil {
+		log.Printf("Falha ao trocar código por token: %v", err)
+	}
+	
+	// Verifica se o token contém o campo id_token
+	idToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		log.Printf("Token JWT não encontrado ou malformado")
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"token": idToken})
+}
+
 func main() {
 	// Inicializa o banco de dados com debug
 	database.InitDatabase()
@@ -126,24 +143,31 @@ func main() {
 
 	// Grupo de rotas com middleware de autenticação
 	v1 := r.Group("/api/v1")
-	v1.Use(AuthMiddleware())
-	{
-		v1.GET("/map", handlers.GetDeviceMap)
-		v1.GET("/users", handlers.ListUsers)
-		v1.GET("/cooperativas", handlers.ListCooperativas)
-		v1.GET("/devices", handlers.ListDevices)
-		v1.GET("/devices/:uuid", handlers.GetDeviceData)
-		v1.GET("/devices/:uuid/sensor/:idSensor", handlers.GetSensorData)
-		v1.GET("/sensores", handlers.ListSensors)
-		v1.POST("/cooperativas", handlers.CreateCooperativa)
-		v1.POST("/devices", handlers.CreateDevice)
-		v1.POST("/users", handlers.CreateUser)
-		v1.POST("/sensores", handlers.CreateSensor)
-		v1.DELETE("/cooperativas/:cnpj", handlers.DeleteCooperativa)
-		v1.DELETE("/devices/:uuid", handlers.DeleteDevice)
-		v1.DELETE("/users/:matricula", handlers.DeleteUser)
-		v1.DELETE("/devices/:uuid/sensores/:id", handlers.DeleteSensor)
+	{	
+		v1.POST("/auth", Authenticate)
+
+		protected := v1.Group("/")
+		protected.Use(AuthMiddleware())
+		{
+			protected.GET("/map", handlers.GetDeviceMap)
+			protected.GET("/users", handlers.ListUsers)
+			protected.GET("/cooperativas", handlers.ListCooperativas)
+			protected.GET("/devices", handlers.ListDevices)
+			protected.GET("/devices/:uuid", handlers.GetDeviceData)
+			protected.GET("/devices/:uuid/sensor/:idSensor", handlers.GetSensorData)
+			protected.GET("/sensores", handlers.ListSensors)
+			protected.POST("/cooperativas", handlers.CreateCooperativa)
+			protected.POST("/devices", handlers.CreateDevice)
+			protected.POST("/users", handlers.CreateUser)
+			protected.POST("/sensores", handlers.CreateSensor)
+			protected.DELETE("/cooperativas/:cnpj", handlers.DeleteCooperativa)
+			protected.DELETE("/devices/:uuid", handlers.DeleteDevice)
+			protected.DELETE("/users/:matricula", handlers.DeleteUser)
+			protected.DELETE("/devices/:uuid/sensores/:id", handlers.DeleteSensor)
+		}
 	}
+
+
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.Run(":8080")
