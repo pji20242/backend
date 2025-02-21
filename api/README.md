@@ -19,6 +19,8 @@ go install github.com/swaggo/swag/cmd/swag@latest
 swag init
 ```
 
+go get google.golang.org/api/idtoken
+
 ### to compile it: 
 
 This flags are used to compile the code to a linux binary file without any dependencies, it needs to be run in that way for alpine linux containers.

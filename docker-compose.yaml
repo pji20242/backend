@@ -40,6 +40,8 @@ services:
     volumes:
       - ./api/apiconnector.out:/apiconnector.out:rw
     restart: always
+    env_file:
+      - ./api/env/.env
 
 # ========================================================================================================
   reverse-proxy:
