@@ -3,31 +3,35 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
-	"strings"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/pji20242/backend/api/database"
 	"github.com/pji20242/backend/api/handlers"
 	"github.com/pji20242/backend/api/models"
-	"google.golang.org/api/idtoken"
+	"golang.org/x/oauth2"        // Importação correta do pacote OAuth2
+	"golang.org/x/oauth2/google" // Importação para configuração do Google OAuth2
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-
-
 // AuthMiddleware extrai o token do header Authorization e o valida.
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientID := os.Getenv("CLIENT_ID")
-		// Verifica se o CLIENT_ID foi definido
-		if clientID == "" {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "CLIENT_ID não definido"})
+		clientSecret := os.Getenv("CLIENT_SECRET")
+
+		// Verifica se as variáveis de ambiente estão definidas
+		if clientID == "" || clientSecret == "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "CLIENT_ID ou CLIENT_SECRET não definidos"})
 			return
 		}
+
 		// Extrai o header Authorization
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -42,20 +46,47 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		token := parts[1]
-		// Valida o ID Token usando a biblioteca do Google.
-		ctx := context.Background()
-		payload, err := idtoken.Validate(ctx, token, clientID)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("Token inválido: %v", err)})
-			return
+		code := parts[1]
+
+		// Configura o cliente OAuth2
+		config := &oauth2.Config{
+			ClientID:     clientID,
+			ClientSecret: clientSecret,
+			RedirectURL:  "postmessage",   // Usado para troca de código
+			Endpoint:     google.Endpoint, // Endpoint do Google OAuth2
 		}
 
-		// Extrai o email do payload (assumindo que o email está no payload)
-		email, ok := payload.Claims["email"].(string)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Email não encontrado no token"})
+		// Troca o código pelo token
+		token, err := config.Exchange(context.Background(), code)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Falha ao trocar código por token: %v", err)})
 			return
+		}
+		fmt.Println(token)
+
+		idToken, ok := token.Extra("id_token").(string)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token JWT não encontrado"})
+			return
+		}
+		fmt.Println("ID Token:", idToken)
+
+		parser := new(jwt.Parser)
+		// Parse the token without verifying the signature
+		parsed, _, err := parser.ParseUnverified(idToken, jwt.MapClaims{})
+		if err != nil {
+			log.Fatalf("Error parsing token: %v", err)
+		}
+
+		claims, ok := parsed.Claims.(jwt.MapClaims)
+		if !ok {
+			log.Fatal("Failed to parse token claims")
+		}
+
+		email, emailOk := claims["email"].(string)
+		name, nameOk := claims["name"].(string)
+		if !emailOk || !nameOk {
+			log.Fatal("Token does not contain email and/or name")
 		}
 
 		// Busca o usuário no banco de dados pelo email
@@ -63,10 +94,10 @@ func AuthMiddleware() gin.HandlerFunc {
 		if err := database.GetDB().Where("email = ?", email).First(&user).Error; err != nil {
 			// Se o usuário não existir, cria um novo usuário
 			user = models.User{
-				Nome:  payload.Claims["name"].(string), // Assumindo que o nome está no payload
+				Nome:  name, // Assumindo que o nome está no payload
 				Email: email,
 				User:  strings.Split(email, "@")[0], // Gera um nome de usuário a partir do email
-				Senha: "", // Senha pode ser deixada em branco ou gerada automaticamente
+				Senha: "",                           // Senha pode ser deixada em branco ou gerada automaticamente
 				Ativo: true,
 			}
 			if err := database.GetDB().Create(&user).Error; err != nil {
@@ -86,30 +117,26 @@ func main() {
 
 	r := gin.Default()
 
+	// Grupo para rotas da API v1
 	v1 := r.Group("/api/v1")
+	v1.Use(AuthMiddleware())
 	{
 		// Rotas públicas
 		v1.GET("/map", handlers.GetDeviceMap)
-
-		// Rotas protegidas por autenticação
-		authGroup := v1.Group("/")
-		authGroup.Use(AuthMiddleware())
-		{
-			authGroup.GET("/users", handlers.ListUsers)
-			authGroup.GET("/cooperativas", handlers.ListCooperativas)
-			authGroup.GET("/devices", handlers.ListDevices)
-			authGroup.GET("/devices/:uuid", handlers.GetDeviceData)
-			authGroup.GET("/devices/:uuid/sensor/:idSensor", handlers.GetSensorData)
-			authGroup.GET("/sensores", handlers.ListSensors)
-			authGroup.POST("/cooperativas", handlers.CreateCooperativa)
-			authGroup.POST("/devices", handlers.CreateDevice)
-			authGroup.POST("/users", handlers.CreateUser)
-			authGroup.POST("/sensores", handlers.CreateSensor)
-			authGroup.DELETE("/cooperativas/:cnpj", handlers.DeleteCooperativa)
-			authGroup.DELETE("/devices/:uuid", handlers.DeleteDevice)
-			authGroup.DELETE("/users/:matricula", handlers.DeleteUser)
-			authGroup.DELETE("/devices/:uuid/sensores/:id", handlers.DeleteSensor)
-		}
+		v1.GET("/users", handlers.ListUsers)
+		v1.GET("/cooperativas", handlers.ListCooperativas)
+		v1.GET("/devices", handlers.ListDevices)
+		v1.GET("/devices/:uuid", handlers.GetDeviceData)
+		v1.GET("/devices/:uuid/sensor/:idSensor", handlers.GetSensorData)
+		v1.GET("/sensores", handlers.ListSensors)
+		v1.POST("/cooperativas", handlers.CreateCooperativa)
+		v1.POST("/devices", handlers.CreateDevice)
+		v1.POST("/users", handlers.CreateUser)
+		v1.POST("/sensores", handlers.CreateSensor)
+		v1.DELETE("/cooperativas/:cnpj", handlers.DeleteCooperativa)
+		v1.DELETE("/devices/:uuid", handlers.DeleteDevice)
+		v1.DELETE("/users/:matricula", handlers.DeleteUser)
+		v1.DELETE("/devices/:uuid/sensores/:id", handlers.DeleteSensor)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

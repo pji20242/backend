@@ -12,5 +12,4 @@ clean:
 	docker rmi -f $(docker images -aq)
 	docker volume rm $(docker volume ls -q)
 
-
 erase: stop clean start
