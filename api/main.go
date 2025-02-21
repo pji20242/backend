@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -62,14 +63,12 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Falha ao trocar código por token: %v", err)})
 			return
 		}
-		fmt.Println(token)
 
 		idToken, ok := token.Extra("id_token").(string)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token JWT não encontrado"})
 			return
 		}
-		fmt.Println("ID Token:", idToken)
 
 		parser := new(jwt.Parser)
 		// Parse the token without verifying the signature
@@ -85,8 +84,19 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		email, emailOk := claims["email"].(string)
 		name, nameOk := claims["name"].(string)
-		if !emailOk || !nameOk {
-			log.Fatal("Token does not contain email and/or name")
+		matricula, matriculaOk := claims["sub"].(string)
+		if !emailOk || !nameOk || !matriculaOk {
+			log.Fatal("Token does not contain email and/or name, and/or matricula")
+		}
+
+		fmt.Print(email)
+		fmt.Print(name)
+		fmt.Print(matricula)
+
+		// converte matricula para int
+		matriculaInt, err := strconv.Atoi(matricula)
+		if err != nil {
+			log.Fatalf("Error converting matricula to int: %v", err)
 		}
 
 		// Busca o usuário no banco de dados pelo email
@@ -94,11 +104,12 @@ func AuthMiddleware() gin.HandlerFunc {
 		if err := database.GetDB().Where("email = ?", email).First(&user).Error; err != nil {
 			// Se o usuário não existir, cria um novo usuário
 			user = models.User{
-				Nome:  name, // Assumindo que o nome está no payload
-				Email: email,
-				User:  strings.Split(email, "@")[0], // Gera um nome de usuário a partir do email
-				Senha: "",                           // Senha pode ser deixada em branco ou gerada automaticamente
-				Ativo: true,
+				Nome:      name, // Assumindo que o nome está no payload
+				Email:     email,
+				User:      strings.Split(email, "@")[0], // Gera um nome de usuário a partir do email
+				Senha:     "",                           // Senha pode ser deixada em branco ou gerada automaticamente
+				Ativo:     true,
+				Matricula: matriculaInt,
 			}
 			if err := database.GetDB().Create(&user).Error; err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Falha ao criar usuário"})
