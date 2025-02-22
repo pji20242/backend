@@ -1,0 +1,17 @@
+CREATE TABLE mqttusers (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    pw VARCHAR(255) NOT NULL,
+    super BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE mqttacls (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    topic VARCHAR(255) NOT NULL,
+    rw INT NOT NULL DEFAULT 1
+);
+
+-- Criando o usuário para conexão
+CREATE USER connectoruser WITH PASSWORD 'connectorpasswrd';
+GRANT ALL PRIVILEGES ON DATABASE mqtt TO connectoruser;

@@ -79,7 +79,22 @@ CREATE TABLE dados (
     FOREIGN KEY (uuid, idSensor) REFERENCES sensor(uuid, idSensor) ON DELETE CASCADE
 );
 
+CREATE TABLE mqttusers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    pw VARCHAR(255) NOT NULL,
+    super TINYINT(1) NOT NULL DEFAULT 0
+);
+
+CREATE TABLE mqttacls (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    topic VARCHAR(255) NOT NULL,
+    rw INT NOT NULL DEFAULT 1
+);
+
 -- Usuário para conexão
 CREATE USER 'connectoruser'@'%' IDENTIFIED BY 'connectorpasswrd';
 GRANT ALL PRIVILEGES ON pjiot.* TO 'connectoruser'@'%';
+ALTER USER 'root'@'%' IDENTIFIED WITH caching_sha2_password BY 'rootpass';
 FLUSH PRIVILEGES;
