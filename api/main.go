@@ -37,7 +37,6 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		token := parts[1]
 		log.Printf("Código de autorização extraído: %s", token)
-		
 
 		parser := new(jwt.Parser)
 		parsed, _, err := parser.ParseUnverified(token, jwt.MapClaims{})
@@ -98,21 +97,21 @@ type AuthCode struct {
 	Code string `json:"code"`
 }
 
-func Authenticate(c *gin.Context ) {
+func Authenticate(c *gin.Context) {
 	clientID := os.Getenv("CLIENT_ID")
 	clientSecret := os.Getenv("CLIENT_SECRET")
 
 	if clientID == "" || clientSecret == "" {
 		log.Printf("CLIENT_ID ou CLIENT_SECRET não definidos")
 	}
-	
+
 	config := &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		RedirectURL:  "postmessage",
 		Endpoint:     google.Endpoint,
 	}
-	
+
 	// Recupera o código de autorização
 	var authCode AuthCode
 	if err := c.ShouldBindJSON(&authCode); err != nil {
@@ -125,27 +124,29 @@ func Authenticate(c *gin.Context ) {
 	if err != nil {
 		log.Printf("Falha ao trocar código por token: %v", err)
 	}
-	
+
 	// Verifica se o token contém o campo id_token
 	idToken, ok := token.Extra("id_token").(string)
 	if !ok {
 		log.Printf("Token JWT não encontrado ou malformado")
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"token": idToken})
 }
 
 func main() {
 	// Inicializa o banco de dados com debug
 	database.InitDatabase()
+	database.InitMQTTDatabase()
 
 	r := gin.Default()
 
 	// Grupo de rotas com middleware de autenticação
 	v1 := r.Group("/api/v1")
-	{	
+	{
 		v1.POST("/auth", Authenticate)
 
+		// Grupo protegido com autenticação
 		protected := v1.Group("/")
 		protected.Use(AuthMiddleware())
 		{
@@ -166,10 +167,20 @@ func main() {
 			protected.DELETE("/users/:matricula", handlers.DeleteUser)
 			protected.DELETE("/devices/:uuid/sensores/:id", handlers.DeleteSensor)
 		}
+
+		// Rotas para MqttUser e MqttAcl fora do middleware de autenticação
+		v1.GET("/mqttusers", handlers.ListMqttUsers)
+		v1.POST("/mqttusers", handlers.CreateMqttUser)
+		v1.DELETE("/mqttusers/:username", handlers.DeleteMqttUser)
+
+		v1.GET("/mqttacls", handlers.ListMqttAcls)
+		v1.POST("/mqttacls", handlers.CreateMqttAcl)
+		v1.DELETE("/mqttacls/:username/:topic", handlers.DeleteMqttAcl)
 	}
 
-
-
+	// Swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// Inicia o servidor
 	r.Run(":8080")
 }
