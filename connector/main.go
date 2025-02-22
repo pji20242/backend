@@ -37,6 +37,9 @@ func main() {
     // Configuração do cliente MQTT
     opts := MQTT.NewClientOptions().AddBroker("tcp://mqtt-broker:1883")
     opts.SetClientID("go_mqtt_client")
+    opts.SetUsername("connector")  // Adicionando o usuário
+    opts.SetPassword("connectorpass") // Adicionando a senha
+
     opts.OnConnect = func(c MQTT.Client) {
         fmt.Println("Conectado ao broker MQTT!")
     }

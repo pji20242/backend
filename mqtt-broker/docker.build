@@ -1,0 +1,71 @@
+FROM eclipse-mosquitto:1.4.4
+
+# Instale as dependências necessárias
+RUN apk add --no-cache --virtual .build-deps \
+    git \
+    build-base \
+    cmake \
+    openssl-dev \
+    c-ares-dev \
+    util-linux-dev \
+    libxslt-dev \
+    python3-dev \
+    mysql-dev
+
+# Clone o repositório do mosquitto-auth-plug
+RUN git clone https://github.com/iegomez/mosquitto-auth-plug.git /mosquitto-auth-plug
+
+# Compile o plugin
+WORKDIR /mosquitto-auth-plug
+RUN cp config.mk.in config.mk
+RUN echo "BACKEND_CDB ?= no" >> config.mk
+RUN echo "BACKEND_MYSQL ?= yes" >> config.mk
+RUN echo "BACKEND_SQLITE ?= no" >> config.mk
+RUN echo "BACKEND_REDIS ?= no" >> config.mk
+RUN echo "BACKEND_POSTGRES ?= no" >> config.mk
+RUN echo "BACKEND_LDAP ?= no" >> config.mk
+RUN echo "BACKEND_HTTP ?= no" >> config.mk
+RUN echo "BACKEND_JWT ?= no" >> config.mk
+RUN echo "BACKEND_MONGO ?= no" >> config.mk
+RUN echo "BACKEND_FILES ?= no" >> config.mk
+RUN echo "BACKEND_MEMCACHED ?= no" >> config.mk
+RUN echo "MOSQUITTO_SRC = /mosquitto/src" >> config.mk
+RUN echo "CFG_LDFLAGS = -lcares" >> config.mk
+
+RUN make
+
+# Copie o plugin compilado para o diretório de plugins do Mosquitto
+RUN cp auth-plug.so /mosquitto/plugins/
+
+# Comando para rodar o Mosquitto
+CMD ["/usr/sbin/mosquitto", "-c", "/mosquitto/config/mosquitto.conf"]
+
+
+
+# =================================================================================================
+
+apkd update apk add mosquitto-dev
+apk add --no-cache git build-base cmake openssl-dev c-ares-dev util-linux-dev libxslt-dev python3-dev mysql-dev && git clone https://github.com/iegomez/mosquitto-auth-plug.git /mosquitto-auth-plug
+
+cp config.mk.in config.mk
+echo "BACKEND_CDB ?= no" >> config.mk
+echo "BACKEND_MYSQL ?= yes" >> config.mk
+echo "BACKEND_SQLITE ?= no" >> config.mk
+echo "BACKEND_REDIS ?= no" >> config.mk
+echo "BACKEND_POSTGRES ?= no" >> config.mk
+echo "BACKEND_LDAP ?= no" >> config.mk
+echo "BACKEND_HTTP ?= no" >> config.mk
+echo "BACKEND_JWT ?= no" >> config.mk
+echo "BACKEND_MONGO ?= no" >> config.mk
+echo "BACKEND_FILES ?= no" >> config.mk
+echo "BACKEND_MEMCACHED ?= no" >> config.mk
+echo "BACKEND_GO ?= no" >> config.mk
+echo "MOSQUITTO_SRC = /mosquitto/src" >> config.mk
+echo "CFG_LDFLAGS = -lcares" >> config.mk
+
+
+
+WORKDIR /mosquitto
+RUN wget https://github.com/eclipse/mosquitto/archive/refs/tags/v1.4.14.tar.gz -O mosquitto-src.tar.gz
+mkdir -p /mosquitto/src
+RUN tar -xzf mosquitto-src.tar.gz --strip-components=1 -C /mosquitto/src

@@ -12,7 +12,7 @@ while true; do
 
     
     # Publica os sensores de temperatura, pressao e luminosidade do device 1 
-    mosquitto_pub -h 127.0.0.1 -p 1883 -t pji3 -m "3170dd2b-f944-4835-8a4a-e2ab5dee3b25%1=$temperatura%2=$pressao%3=$luminosidade"
+    mosquitto_pub -h 127.0.0.1 -p 1883 -t pji3 -u teste -p teste -m "3170dd2b-f944-4835-8a4a-e2ab5dee3b25%1=$temperatura%2=$pressao%3=$luminosidade"
 
     # # Publica os sensores de umidade do device 2
     mosquitto_pub -h 127.0.0.1 -p 1883 -t pji3 -m "887010d3-a456-4572-b3b6-c5edfc7d765c%4=$umidade"

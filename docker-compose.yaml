@@ -1,10 +1,28 @@
 services:
   mqtt-broker:
     container_name: mqtt-broker
-    image: eclipse-mosquitto
+    build:
+      context: .
+      dockerfile: ./mqtt-broker/Dockerfile
+    ports:
+      - 1883:1883
     restart: always
     volumes:
       - ./mqtt-broker/mosquitto.cfg:/mosquitto/config/mosquitto.conf
+      - ./mqtt-broker/entrypoint.sh:/entrypoint.sh
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+
+  dbmqtt: 
+    image: postgres:13
+    container_name: dbmqtt
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mqtt
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./databaseMqtt/setup.sql:/docker-entrypoint-initdb.d/init.sql
 
 # =======================================================================================================
   database:
