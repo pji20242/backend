@@ -9,7 +9,7 @@ services:
       - ./mqtt-broker/mosquitto.cfg:/mosquitto/config/mosquitto.conf
       - ./mqtt-broker/entrypoint.sh:/entrypoint.sh
     entrypoint: ["/bin/sh", "/entrypoint.sh"]
-
+# =======================================================================================================
   dbmqtt: 
     image: postgres:13
     container_name: dbmqtt
@@ -47,6 +47,8 @@ services:
     depends_on:
       - mqtt-broker
     restart: always
+    env_file:
+      - ./connector/env/.env
 
 # ========================================================================================================
   apiconnector:
