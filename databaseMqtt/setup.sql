@@ -11,7 +11,3 @@ CREATE TABLE mqttacls (
     topic VARCHAR(255) NOT NULL,
     rw INT NOT NULL DEFAULT 1
 );
-
--- Criando o usuário para conexão
-CREATE USER connectoruser WITH PASSWORD 'connectorpasswrd';
-GRANT ALL PRIVILEGES ON DATABASE mqtt TO connectoruser;

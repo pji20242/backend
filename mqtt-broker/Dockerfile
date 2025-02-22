@@ -1,4 +1,4 @@
-FROM arthurcadore/mqtt-broker-auth:2.0
+FROM arthurcadore/mqtt-broker-auth:3.0
 
 RUN apk update && apk add --no-cache postgresql-dev
 
