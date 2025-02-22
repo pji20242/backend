@@ -2,7 +2,7 @@ CREATE TABLE mqttusers (
     id SERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
     pw VARCHAR(255) NOT NULL,
-    super BOOLEAN NOT NULL DEFAULT FALSE
+    mosquitto_super BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE mqttacls (
