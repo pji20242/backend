@@ -166,16 +166,15 @@ func main() {
 			protected.DELETE("/devices/:uuid", handlers.DeleteDevice)
 			protected.DELETE("/users/:matricula", handlers.DeleteUser)
 			protected.DELETE("/devices/:uuid/sensores/:id", handlers.DeleteSensor)
+
+			// Rotas MQTT
+			protected.GET("/mqttusers", handlers.ListMqttUsers)
+			protected.POST("/mqttusers", handlers.CreateMqttUser)
+			protected.DELETE("/mqttusers/:username", handlers.DeleteMqttUser)
+			protected.GET("/mqttacls", handlers.ListMqttAcls)
+			protected.POST("/mqttacls", handlers.CreateMqttAcl)
+			protected.DELETE("/mqttacls/:username/:topic", handlers.DeleteMqttAcl)
 		}
-
-		// Rotas para MqttUser e MqttAcl fora do middleware de autenticação
-		v1.GET("/mqttusers", handlers.ListMqttUsers)
-		v1.POST("/mqttusers", handlers.CreateMqttUser)
-		v1.DELETE("/mqttusers/:username", handlers.DeleteMqttUser)
-
-		v1.GET("/mqttacls", handlers.ListMqttAcls)
-		v1.POST("/mqttacls", handlers.CreateMqttAcl)
-		v1.DELETE("/mqttacls/:username/:topic", handlers.DeleteMqttAcl)
 	}
 
 	// Swagger
