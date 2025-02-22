@@ -6,12 +6,8 @@ stop:
 start:
 	docker compose up & 
 
-clean:
-	docker compose down 
-	docker rm -f $(docker ps -aq) 
-	docker rmi -f $(docker images -aq)
-	docker volume rm $(docker volume ls -q)
-
+clean: stop
+	docker ps -a -q | xargs docker rm ; docker images -q | xargs docker rmi -f ; docker volume ls -q | xargs docker volume rm
 restart:
 	docker compose restart apiconnector
 
