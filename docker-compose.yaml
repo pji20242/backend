@@ -20,6 +20,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
+      - pgdata:/var/lib/postgresql/data
       - ./databaseMqtt/setup.sql:/docker-entrypoint-initdb.d/init.sql
 
 # =======================================================================================================
@@ -92,3 +93,4 @@ secrets:
 volumes:
   influxdb_data:
   mysql_data:
+  pgdata:
