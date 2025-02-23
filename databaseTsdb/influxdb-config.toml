@@ -1,0 +1,10 @@
+[meta]
+  dir = "/var/lib/influxdb2/meta"
+
+[data]
+  dir = "/var/lib/influxdb2/data"
+  engine = "tsm1"
+
+[http]
+  bind-address = ":8086"
+  auth-enabled = true

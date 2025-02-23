@@ -28,3 +28,10 @@ This flags are used to compile the code to a linux binary file without any depen
 ```bash
  CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o apiconnector.out
 ```
+
+## env example:
+
+```env
+CLIENT_ID=<client_id>
+CLIENT_SECRET=<client_secret>
+```
